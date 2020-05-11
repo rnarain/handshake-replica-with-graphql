@@ -1,9 +1,10 @@
 const graphql = require('graphql');
 const Student = require("../Models/StudentModel");
 const Company = require("../Models/CompanyModel");
-const { addStudent , updateStudentName , updateEducation , updateExperience , updateObjective } = require("../mutations/student")
+const { addStudent , updateStudentName ,updateSkills ,
+     updateEducation , updateExperience , updateObjective , updateAccountInfo } = require("../mutations/student")
 const { updateCompanyDetails } = require("../mutations/company")
-const { applyForJob , changeApplicationStatus , createJob } = require("../mutations/job")
+const { applyForJob , changeApplicationStatus , createJob , } = require("../mutations/job")
 
 const {
     GraphQLObjectType,
@@ -35,12 +36,12 @@ const StudentType = new GraphQLObjectType({
 const EducationType = new GraphQLObjectType({
     name: 'Education',
     fields: () => ({
-        college : { type: GraphQLInt },
-        major : {type: GraphQLInt},
+        college : { type: GraphQLString },
+        major : {type: GraphQLString},
         yearOfStarting : { type: GraphQLString },
         yearOfPassing : { type: GraphQLString },
         gpa : { type: GraphQLString },
-        degreeType : {type: GraphQLInt}
+        degreeType : {type: GraphQLString}
     })
 });
 const ExperienceType = new GraphQLObjectType({
@@ -101,61 +102,7 @@ const JobApplicantType = new GraphQLObjectType({
     })
 });
 
-// const UserType = new GraphQLObjectType({
-//     name: 'User',
-//     fields: () => ({
-//         id: { type: GraphQLID },
-//         name: { type: GraphQLString },
-//         email_id: { type: GraphQLString },
-//         password: { type: GraphQLString },
-//         address: { type: GraphQLString },
-//         phone_number: { type: GraphQLString },
-//         restaurant: { type: RestaurantType }
-//     })
-// });
 
-// const RestaurantType = new GraphQLObjectType({
-//     name: 'Restaurant',
-//     fields: () => ({
-//         id: { type: GraphQLID },
-//         res_name: { type: GraphQLString },
-//         res_cuisine: { type: GraphQLString },
-//         res_zip_code: { type: GraphQLString },
-//         res_address: { type: GraphQLString },
-//         res_phone_number: { type: GraphQLString },
-//         owner_user_id: { type: GraphQLID },
-//         menu_sections: {
-//             type: new GraphQLList(MenuSectionType),
-//             resolve(parent, args) {
-//                 return parent.menu_sections;
-//             }
-//         }
-//     })
-// });
-
-// const MenuSectionType = new GraphQLObjectType({
-//     name: 'Menu_Section',
-//     fields: () => ({
-//         _id: { type: GraphQLID },
-//         menu_section_name: { type: GraphQLString },
-//         menu_items: {
-//             type: new GraphQLList(MenuItemType),
-//             resolve(parent, args) {
-//                 return parent.menu_items;
-//             }
-//         }
-//     })
-// });
-
-// const MenuItemType = new GraphQLObjectType({
-//     name: 'Menu_Item',
-//     fields: () => ({
-//         id: { type: GraphQLID },
-//         item_name: { type: GraphQLString },
-//         item_description: { type: GraphQLString },
-//         item_price: { type: GraphQLInt }
-//     })
-// });
 
 const StatusType = new GraphQLObjectType({
     name: 'Status',
@@ -184,19 +131,6 @@ const RootQuery = new GraphQLObjectType({
             async resolve(parent, args) {
                 let students = await Student.find({ });
                 return students;
-            }
-        },
-        login: {
-            type: StudentType,
-            args: { 
-                email: { type: GraphQLString },
-                password: {type: GraphQLString} 
-            },
-            async resolve(parent, args) {
-                let student = await Student.findOne({email : args.email , password: args.password});
-                if (student) {
-                    return student;
-                }
             }
         },
         company: {
@@ -276,6 +210,32 @@ const RootQuery = new GraphQLObjectType({
 const Mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
+        login: {
+            type: StudentType,
+            args: { 
+                email: { type: GraphQLString },
+                password: {type: GraphQLString} 
+            },
+            async resolve(parent, args) {
+                let student = await Student.findOne({email : args.email , password: args.password});
+                if (student) {
+                    return student;
+                }
+            }
+        },
+        companyLogin: {
+            type: CompanyType,
+            args: { 
+                email: { type: GraphQLString },
+                password: {type: GraphQLString} 
+            },
+            async resolve(parent, args) {
+                let company = await Company.findOne({email : args.email , password: args.password});
+                if (company) {
+                    return company;
+                }
+            }
+        },
         addStudent: {
             type: StatusType,
             args: {
@@ -311,16 +271,38 @@ const Mutation = new GraphQLObjectType({
                 return updateObjective(args);
             }
         },
+        updateAccountInfo: {
+            type: StatusType,
+            args: {
+                id : {type: GraphQLString},
+                phone: { type: GraphQLString },
+                email: { type: GraphQLString },
+            },
+            async resolve(parent, args) {
+                return updateAccountInfo(args);
+            }
+        },
+        updateSkills: {
+            type: StatusType,
+            args: {
+                id : {type: GraphQLString},
+                skills: { type: GraphQLString },
+            },
+            async resolve(parent, args) {
+                return updateSkills(args);
+            }
+        },
+
         updateEducation: {
             type: StatusType,
             args: {
                 id : {type: GraphQLString},
-                college: { type: GraphQLInt },
-                major: { type: GraphQLInt },
+                college: { type: GraphQLString },
+                major: { type: GraphQLString },
                 yearOfStarting: { type: GraphQLString },
                 yearOfPassing: { type: GraphQLString },
-                gpa: { type: GraphQLInt },
-                degreeType: { type: GraphQLInt }
+                gpa: { type: GraphQLString },
+                degreeType: { type: GraphQLString }
             },
             async resolve(parent, args) {
                 return updateEducation(args);

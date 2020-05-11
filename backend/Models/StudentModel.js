@@ -13,12 +13,12 @@ var studentSchema = new Schema({
         profilePicURL : String,
         education : 
             {
-                college : Number,
-                major : Number,
+                college : String,
+                major : String,
                 yearOfStarting : String,
                 yearOfPassing : String,
                 gpa : String,
-                degreeType : Number
+                degreeType : String
             },
         experience : 
             {
