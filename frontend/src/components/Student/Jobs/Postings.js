@@ -6,6 +6,8 @@ import JobList from './JobList';
 import backendServer from '../../../webConfig'
 import { connect } from 'react-redux';
 import { updateFilteredJobs } from "../../../js/actions/jobSearch.js";
+import { graphql , compose } from 'react-apollo';
+import {jobsByStudentIDQuery} from '../../../queries/queries'
 
 
 
@@ -17,29 +19,40 @@ class Postings extends Component {
         this.state = {
             jobList: [],
             filteredJobList: [],
+            valueRecieved: false
         }
 
-        this.filterChangeHandler = this.filterChangeHandler.bind(this);
+        // this.filterChangeHandler = this.filterChangeHandler.bind(this);
         this.searchChangeHandler = this.searchChangeHandler.bind(this);
     }
     //Call the Will Mount to set the auth Flag to false
-    async componentWillMount() {
+    // async componentWillMount() {
 
-        axios.defaults.withCredentials = true;
-        //make a post request with the user data
-        axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
-        await axios.get(`${backendServer}/api/job/getJobsByStudentID/${localStorage.getItem('id')}`)
-            .then(response => {
-                console.log(response);
-                this.setState({
-                    jobList: response.data.data,
-                    filteredJobList: response.data.data
-                })
-                this.props.updateFilteredJobs({jobs:this.state.jobList});
-            }
-            ).catch(ex => {
-                alert("error");
-            });
+    //     axios.defaults.withCredentials = true;
+    //     //make a post request with the user data
+    //     axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
+    //     await axios.get(`${backendServer}/api/job/getJobsByStudentID/${localStorage.getItem('id')}`)
+    //         .then(response => {
+    //             console.log(response);
+    //             this.setState({
+    //                 jobList: response.data.data,
+    //                 filteredJobList: response.data.data
+    //             })
+    //             this.props.updateFilteredJobs({jobs:this.state.jobList});
+    //         }
+    //         ).catch(ex => {
+    //             alert("error");
+    //         });
+    // }
+    componentDidUpdate(){
+        if(!this.props.data.loading && !this.state.valueRecieved){
+            let data = this.props.data.jobsByStudentID;
+            this.setState({
+                jobList: data,
+                filteredJobList:data,
+                valueRecieved:true
+            })
+        }
     }
 
     searchChangeHandler = (e) => {
@@ -90,7 +103,7 @@ class Postings extends Component {
                         </div>
                     </div>
                     <div className="col-sm-12 card">
-                        <div className="box-part-container margin20"> <JobList />
+                        <div className="box-part-container margin20"> <JobList jobList={this.state.filteredJobList}/>
                         </div>
                     </div>
                 </div>
@@ -98,4 +111,8 @@ class Postings extends Component {
         )
     }
 }
-export default Postings;
+export default graphql(jobsByStudentIDQuery, {
+    options: {
+        variables: { 'id': localStorage.getItem("id") }
+    }
+})(Postings);

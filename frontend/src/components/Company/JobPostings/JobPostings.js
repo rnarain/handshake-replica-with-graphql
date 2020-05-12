@@ -6,7 +6,8 @@ import {jobTypes} from '../../../enum.js'
 // import Swal from 'sweetalert2'
 // import withReactContent from 'sweetalert2-react-content'
 import backendServer from '../../../webConfig'
-
+import { createJobMutation  } from '../../../mutations/mutations'
+import { graphql , compose } from 'react-apollo';
 
 // const MySwal = withReactContent(Swal)
 
@@ -75,40 +76,69 @@ class JobPostings extends Component {
         })
     }
     //submit Signup handler to send a request to the node backend
-    PostJob = (e) => {
+    PostJob = async (e) => {
         //prevent page from refresh
         e.preventDefault();
-        const data = {
-            companyID :localStorage.getItem('id'),
-            companyName:localStorage.getItem('name'),
-            description:this.state.description,
-            title:this.state.title,
-            salary:this.state.salary,
-            deadLineDate:this.state.deadLineDate,
-            location: this.state.location,
-            category: this.state.category,
+        let mutationResponse = await this.props.createJobMutation({
+            variables: {
+                companyID :localStorage.getItem('id'),
+                // companyName:localStorage.getItem('name'),
+                companyName:"Google",
+                description:this.state.description,
+                title:this.state.title,
+                salary:this.state.salary,
+                deadLineDate:this.state.deadLineDate,
+                location: this.state.location,
+                category: this.state.category,
+            }
+        });
+        let response = mutationResponse.data.createJob;
+        if (response) {
+            console.log(response)
+            if (response.status === "200") {
+                this.setState({
+                    redirectVariable :<Redirect to="/company/listings"/>
+                  })
+            }
+            else{
+                console.log("Couldnt update objective")
+            }
         }
+        // this.setState({
+        //     edit: !this.state.edit
+        // })
+    
+        // const data = {
+        //     companyID :localStorage.getItem('id'),
+        //     companyName:localStorage.getItem('name'),
+        //     description:this.state.description,
+        //     title:this.state.title,
+        //     salary:this.state.salary,
+        //     deadLineDate:this.state.deadLineDate,
+        //     location: this.state.location,
+        //     category: this.state.category,
+        // }
 
-        // set the with credentials to true
-        axios.defaults.withCredentials = true;
-        // make a post request with the user data
-        axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
-        axios.post(`${backendServer}/api/job/createJob`, data)
-            .then(response => {
-                if (response.status === 201) {
-                    // MySwal.fire({
-                    //     icon: 'success',
-                    //     title: 'Job Posted',
-                    //     showConfirmButton: false,
-                    //     timer: 3000
-                    //   })
-                      this.setState({
-                        redirectVariable :<Redirect to="/company/listings"/>
-                      })
-                } else {
-                    console.log("error");
-                }
-            });
+        // // set the with credentials to true
+        // axios.defaults.withCredentials = true;
+        // // make a post request with the user data
+        // axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
+        // axios.post(`${backendServer}/api/job/createJob`, data)
+        //     .then(response => {
+        //         if (response.status === 201) {
+        //             // MySwal.fire({
+        //             //     icon: 'success',
+        //             //     title: 'Job Posted',
+        //             //     showConfirmButton: false,
+        //             //     timer: 3000
+        //             //   })
+        //               this.setState({
+        //                 redirectVariable :<Redirect to="/company/listings"/>
+        //               })
+        //         } else {
+        //             console.log("error");
+        //         }
+        //     });
     }
 
 
@@ -196,4 +226,4 @@ class JobPostings extends Component {
         )
     }
 }
-export default JobPostings;
+export default graphql(createJobMutation,{ name: "createJobMutation"})(JobPostings);

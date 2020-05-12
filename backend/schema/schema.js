@@ -1,6 +1,8 @@
 const graphql = require('graphql');
 const Student = require("../Models/StudentModel");
 const Company = require("../Models/CompanyModel");
+const Job = require("../Models/JobModel");
+
 const { addStudent , updateStudentName ,updateSkills ,
      updateEducation , updateExperience , updateObjective , updateAccountInfo } = require("../mutations/student")
 const { updateCompanyDetails } = require("../mutations/company")
@@ -98,7 +100,6 @@ const JobApplicantType = new GraphQLObjectType({
             studentName: { type: GraphQLString },
             status: {type: GraphQLInt},
             applicationDate: { type: GraphQLString },
-            resumeURL: { type: GraphQLString }
     })
 });
 
@@ -143,21 +144,8 @@ const RootQuery = new GraphQLObjectType({
                 }
             }
         },
-        loginCompany: {
-            type: CompanyType,
-            args: { 
-                email: { type: GraphQLString },
-                password: {type: GraphQLString} 
-            },
-            async resolve(parent, args) {
-                let company = await Company.findOne({email : args.email , password: args.password});
-                if (company) {
-                    return company;
-                }
-            }
-        },
         jobsByStudentID: {
-            type: JobType,
+            type: new GraphQLList(JobType),
             args: { 
                 id : { type: GraphQLString }
             },
@@ -169,7 +157,7 @@ const RootQuery = new GraphQLObjectType({
             }
         },
         jobsByCompanyID: {
-            type: JobType,
+            type: new GraphQLList(JobType),
             args: { 
                 id : { type: GraphQLString }
             },
@@ -181,7 +169,7 @@ const RootQuery = new GraphQLObjectType({
             }
         },
         applicantListByJobID: {
-            type: JobType,
+            type: new GraphQLList(JobApplicantType),
             args: { 
                 id : { type: GraphQLString }
             },
@@ -193,7 +181,7 @@ const RootQuery = new GraphQLObjectType({
             }
         },
         appliedJobsByStudentID: {
-            type: JobType,
+            type: new GraphQLList(JobType),
             args: { 
                 id : { type: GraphQLString }
             },
@@ -328,6 +316,7 @@ const Mutation = new GraphQLObjectType({
             args: {
                 id : {type: GraphQLString},
                 name: { type: GraphQLString },
+                description : { type: GraphQLString },
                 city: { type: GraphQLString },
                 email: { type: GraphQLString },
                 phone: { type: GraphQLString }

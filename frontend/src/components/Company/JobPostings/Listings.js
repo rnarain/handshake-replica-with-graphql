@@ -5,10 +5,8 @@ import axios from 'axios';
 import PostingsNavbar from './PostingsNavbar';
 import backendServer from '../../../webConfig'
 import { paginate, pages } from '../../../helperFunctions/paginate'
-
-
-
-
+import { graphql , compose } from 'react-apollo';
+import {jobsByCompanyIDQuery} from '../../../queries/queries'
 
 
 //create the Navbar Component
@@ -19,6 +17,7 @@ class Listings extends Component {
             jobList: [],
             filteredJobList:[],
             redirectVariable: "",
+            valueRecieved:false
         }
         // this.showJobDetail = this.showJobDetail.bind(this);
         this.viewApplications = this.viewApplications.bind(this);
@@ -32,26 +31,36 @@ class Listings extends Component {
     }
 
 
-    componentDidMount() {
-        axios.defaults.withCredentials = true;
-        // make a post request with the user data
-        axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
-        axios.get(`${backendServer}/api/job/getJobsByCompanyID/${localStorage.getItem('id')}`)
-            .then(response => {
-                if (response.status === 200) {
-                    this.setState({
-                        jobList: response.data.data,
-                        filteredJobList : paginate(response.data.data,1, 10),
-                        pages: pages(response.data.data, 10)
+    // componentDidMount() {
+    //     axios.defaults.withCredentials = true;
+    //     // make a post request with the user data
+    //     axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
+    //     axios.get(`${backendServer}/api/job/getJobsByCompanyID/${localStorage.getItem('id')}`)
+    //         .then(response => {
+    //             if (response.status === 200) {
+    //                 this.setState({
+    //                     jobList: response.data.data,
+    //                     filteredJobList : paginate(response.data.data,1, 10),
+    //                     pages: pages(response.data.data, 10)
 
-                    })
-                    console.log(pages);
-                } else {
-                    console.log("error");
-                }
-            });
+    //                 })
+    //                 console.log(pages);
+    //             } else {
+    //                 console.log("error");
+    //             }
+    //         });
+    // }
+    componentDidUpdate(){
+        if(!this.props.data.loading && !this.state.valueRecieved){
+            console.log(this.props.data)
+            let data = this.props.data.jobsByCompanyID;
+            this.setState({
+                jobList: data,
+                filteredJobList : data,
+                valueRecieved:true
+            })
+        }
     }
-
     paginatinon = (e) => {
         this.setState({
             filteredJobList: paginate(this.state.jobList,e, 10)
@@ -138,9 +147,6 @@ class Listings extends Component {
                         </thead>
                         <tbody>
                             {jobs}
-                            <ul className="pagination">
-                            {links}
-                            </ul>
                         </tbody>
                     </table>
                 </div>
@@ -154,4 +160,8 @@ class Listings extends Component {
     }
 }
 
-export default Listings;
+export default graphql(jobsByCompanyIDQuery, {
+    options: {
+        variables: { 'id': localStorage.getItem("id") }
+    }
+})(Listings);

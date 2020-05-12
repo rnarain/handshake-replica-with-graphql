@@ -13,7 +13,7 @@ const createJob = async (args) => {
         jobApplicants: []
       });
   
-        let savedjob = await newjob.save();
+        let savedjob = await newJob.save();
         if (savedjob) {
             return { status: 200, message: "job Created" };
         }
@@ -29,7 +29,7 @@ const changeApplicationStatus = async (args) => {
       }  
     });
     if (job) {
-            return { status: 200, message: "NAME_UPDATED" };
+            return { status: 200, message: "APPLICATION_STATUS_UPDATED" };
         }
         else {
             return { status: 500, message: "INTERNAL_SERVER_ERROR" };
@@ -45,9 +45,9 @@ const applyForJob = async (args) => {
     let job = await  Job.findById(args.jobID);
     if(job){
         job.jobApplicants.push(newApplication);
-        let savedJob = await Job.save(job);
+        let savedJob = await job.save();
         if (savedJob) {
-                return { status: 200, message: "NAME_UPDATED" };
+                return { status: 200, message: "APPLIED_TO_JOB" };
             }
             else {
                 return { status: 500, message: "INTERNAL_SERVER_ERROR" };

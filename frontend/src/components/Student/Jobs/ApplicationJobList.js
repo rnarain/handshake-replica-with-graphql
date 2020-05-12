@@ -58,10 +58,10 @@ class ApplicationJobList extends Component {
 
         let jobs = this.props.jobList.map(job => {
             return (
-                <div className="row job"  key= {job._id} >
+                <div className="row job"  key= {job.id} >
                     <div className="col-sm-4">
                         <h5> {job.title}</h5>
-                        <p className="smallText"> {job.name}</p>
+                        <p className="smallText"> {job.companyName}</p>
                         <span className="greyText smallText">{jobTypes[job.category]}</span>
                     </div>
                     <div className="col-sm-4">

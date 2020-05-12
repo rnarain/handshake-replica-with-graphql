@@ -6,7 +6,8 @@ import PostingsNavbar from './PostingsNavbar';
 import IndividualApplicant from './IndividualApplicant';
 import backendServer from '../../../webConfig'
 import { paginate, pages } from '../../../helperFunctions/paginate'
-
+import { graphql , compose } from 'react-apollo';
+import {applicantListByJobIDQuery} from '../../../queries/queries'
 
 
 
@@ -19,28 +20,40 @@ class ApplicantList extends Component {
         super(props);
         this.state = {
             applicantList: [],
-            filteredApplicants:[]
+            filteredApplicants:[],
+            valueRecieved:false
         }
     }
 
-    componentDidMount() {
-        axios.defaults.withCredentials = true;
-        // make a post request with the user data
-        axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
-        axios.get(`${backendServer}/api/job/getApplicantListByJobID/${this.props.match.params.id}`)
-            .then(response => {
-                console.log(response);
-                if (response.status === 200) {
-                      this.setState({
-                        applicantList: response.data.data,
-                        filteredApplicants: paginate(response.data.data,1, 10),
-                        pages: pages(response.data.data, 10)
-                      })
-                    console.log(response.data.data);
-                } else {
-                    console.log("error");
-                }
-            });
+    // componentDidMount() {
+    //     axios.defaults.withCredentials = true;
+    //     // make a post request with the user data
+    //     axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
+    //     axios.get(`${backendServer}/api/job/getApplicantListByJobID/${this.props.match.params.id}`)
+    //         .then(response => {
+    //             console.log(response);
+    //             if (response.status === 200) {
+    //                   this.setState({
+    //                     applicantList: response.data.data,
+    //                     filteredApplicants: paginate(response.data.data,1, 10),
+    //                     pages: pages(response.data.data, 10)
+    //                   })
+    //                 console.log(response.data.data);
+    //             } else {
+    //                 console.log("error");
+    //             }
+    //         });
+    // }
+    componentDidUpdate(){
+        if(!this.props.data.loading && !this.state.valueRecieved){
+            console.log(this.props.data)
+            let data = this.props.data.applicantListByJobID;
+            this.setState({
+                applicantList: data,
+                filteredApplicants: data,
+                valueRecieved:true
+            })
+        }
     }
 
     paginatinon = (e) => {
@@ -102,4 +115,8 @@ class ApplicantList extends Component {
     }
 }
 
-export default ApplicantList;
+export default graphql(applicantListByJobIDQuery, {
+    options: {
+        variables: { 'id': localStorage.getItem("id") }
+    }
+})(ApplicantList);

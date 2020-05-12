@@ -32,13 +32,14 @@ class Main extends Component {
                 {/*Render Different Component based on Route*/}
                 {navRoute}
                 <Route exact path="/" render={() => <Redirect to="/login" />} />
-                <Route exact path="/" component={Login}/>
+                <Route exact path="/login" component={Login}/>
                 <Route exact path="/student/profile/:id" component={StudentHome}/>
                 <Route exact path="/company/profile/:id" component={CompanyProfile}/>
                 <Route exact path="/signup" component={Signup}/>
                 <Route exact path="/student/postings" component={Postings}/>
                 <Route exact path="/student/applications" component={Applications}/>
                 <Route exact path="/company/postings" component={JobPostings}/>
+                <Route exact path="/company/listings" component={Listings}/>
                 <Route exact path="/company/applicantlist/:id" component={ApplicantList}/>
                 <Route exact path="/company/students" component={Student}/>
                 <Route exact path="/student/students" component={Students}/>

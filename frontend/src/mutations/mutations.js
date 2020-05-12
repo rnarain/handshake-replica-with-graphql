@@ -66,8 +66,8 @@ const updateExperienceMutation = gql`
     }
 `;
 const updateCompanyDetailsMutation = gql`
-    mutation updateCompanyDetails( $id :String, $name: String , $city: String , $email :String, $phone : String ){
-        updateCompanyDetails(id :$id , name: $name ,city : $city , email:  $email , phone: $phone  ){
+    mutation updateCompanyDetails( $id :String, $name: String ,$description : String ,  $city: String , $email :String, $phone : String ){
+        updateCompanyDetails(id :$id , name: $name , description : $description ,city : $city , email:  $email , phone: $phone  ){
             message
             status
         }

@@ -98,7 +98,6 @@ class Home extends Component {
         componentDidUpdate(){
             if(!this.props.data.loading && !this.state.valueRecieved){
                 let data = this.props.data.student;
-                console.log(data.careerObjective);
                 this.setState({
                     education : data.education,
                     experience : data.experience,

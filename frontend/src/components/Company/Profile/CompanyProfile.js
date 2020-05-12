@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import backendServer from '../../../webConfig'
+import { graphql , compose } from 'react-apollo';
+import { companyQuery } from '../../../queries/queries';
+import { updateCompanyDetailsMutation } from '../../../mutations/mutations';
 
 
 class CompanyProfile extends Component {
@@ -28,35 +31,50 @@ class CompanyProfile extends Component {
     }
 
     async componentWillMount() {
-        axios.defaults.withCredentials = true;
+        if (this.props.match.params.id == localStorage.getItem('id')) {
+            this.setState({
+                editable: true
+            })
+        }
+        // axios.defaults.withCredentials = true;
         //make a post request with the user data
-        await axios.get(`${backendServer}/api/company/getCompanyProfileDetails/${this.props.match.params.id}`)
-            .then(response => {
-                console.log(response);
-                let companyProfile = response.data.data[0];
+        // await axios.get(`${backendServer}/api/company/getCompanyProfileDetails/${this.props.match.params.id}`)
+        //     .then(response => {
+        //         console.log(response);
+        //         let companyProfile = response.data.data[0];
 
-                this.setState({
-                    name: companyProfile.name,
-                    description: companyProfile.description,
-                    city: companyProfile.city,
-                    profilePicURL: companyProfile.profilePicURL,
-                    email: companyProfile.email,
-                    phone: companyProfile.phone,
-                })
-                //console.log(this.state.studentProfileData)
+        //         this.setState({
+                    
+        //         })
+        //         //console.log(this.state.studentProfileData)
 
-                if (this.props.match.params.id == localStorage.getItem('id')) {
-                    this.setState({
-                        editable: true
-                    })
-                }
-            }
-            ).catch(ex => {
-                this.setState({
-                    authFlag: false
-                })
-            });
+        //         if (this.props.match.params.id == localStorage.getItem('id')) {
+        //             this.setState({
+        //                 editable: true
+        //             })
+        //         }
+        //     }
+        //     ).catch(ex => {
+        //         this.setState({
+        //             authFlag: false
+        //         })
+        //     });
     }
+    componentDidUpdate(){
+        if(!this.props.data.loading && !this.state.valueRecieved){
+            let companyProfile = this.props.data.company;
+            this.setState({
+                name: companyProfile.name,
+                description: companyProfile.description,
+                city: companyProfile.city,
+                profilePicURL: companyProfile.profilePicURL,
+                email: companyProfile.email,
+                phone: companyProfile.phone,
+                valueRecieved:true
+            })
+        }
+    }
+
     editButtonChangeHandler = (e) => {
         this.setState({
             edit: !this.state.edit
@@ -111,29 +129,49 @@ class CompanyProfile extends Component {
         })
     }
 
-    submitEdit = (e) => {
-        const data = {
-            name: this.state.name,
-            description: this.state.description,
-            city: this.state.city,
-            email: this.state.email,
-            phone: this.state.phone,
-            id:localStorage.getItem('id'),
-        }
-        axios.post(`${backendServer}/api/company/updateCompanyDetails`, data)
-            .then(response => {
-                console.log(response);
-                if (response.status == 200) {
-                   //success
-                }
+    submitEdit = async (e) => {
+        let mutationResponse = await this.props.updateCompanyDetailsMutation({
+            variables: {
+                name: this.state.name,
+                description: this.state.description,
+                city: this.state.city,
+                email: this.state.email,
+                phone: this.state.phone,
+                id:localStorage.getItem('id'),
             }
-            ).catch(ex => {
-                alert(ex);
-            });
+        });
+        let response = mutationResponse.data.updateCompanyDetailsMutation;
+        if (response) {
+            console.log(response)
+            if (response.status === "200") {
+               
+            }
+            else{
+                console.log("Couldnt update company details")
+            }
+        }
         this.setState({
             edit: !this.state.edit
         })
     }
+
+        // const data = {
+            
+        // }
+        // axios.post(`${backendServer}/api/company/updateCompanyDetails`, data)
+        //     .then(response => {
+        //         console.log(response);
+        //         if (response.status == 200) {
+        //            //success
+        //         }
+        //     }
+        //     ).catch(ex => {
+        //         alert(ex);
+        //     });
+        // this.setState({
+        //     edit: !this.state.edit
+        // })
+    // }
 
     cancelProfileEdit = (e) => {
         this.setState({
@@ -274,4 +312,12 @@ class CompanyProfile extends Component {
     }
 }
 
-export default CompanyProfile;
+export default compose(
+    graphql(companyQuery, {
+        options: {
+            variables: { 'id': localStorage.getItem("id") }
+        }
+    }),
+    graphql(updateCompanyDetailsMutation ,{name:"updateCompanyDetailsMutation"})
+    // connect(...), // incase you are using Redux
+  )(CompanyProfile);

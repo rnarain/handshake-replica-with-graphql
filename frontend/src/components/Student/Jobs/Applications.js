@@ -5,7 +5,8 @@ import PostingsNavbar from './PostingsNavbar';
 import ApplicationJobList from './ApplicationJobList';
 import backendServer from '../../../webConfig'
 import { paginate, pages } from '../../../helperFunctions/paginate'
-
+import { graphql } from 'react-apollo';
+import {appliedJobsByStudentIDQuery} from '../../../queries/queries'
 
 
 
@@ -22,6 +23,7 @@ class Applications extends Component {
             pending : false,
             reviewed: false,
             declined: false,
+            valueRecieved : false
         }
 
         this.filterChangeHandler = this.filterChangeHandler.bind(this);
@@ -29,24 +31,32 @@ class Applications extends Component {
 
 
     }
-    //Call the Will Mount to set the auth Flag to false
-    async componentWillMount() {
 
-        axios.defaults.withCredentials = true;
-        //make a post request with the user data
-        axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
-        await axios.get(`${backendServer}/api/job/getAppliedJobsByStudentID/${localStorage.getItem('id')}`)
-            .then(response => {
-                this.setState({
-                    jobList: response.data.data,
-                    filteredJobList: paginate(response.data.data,1, 10),
-                        pages: pages(response.data.data, 10)
-                })
-            }
-            ).catch(ex => {
-                alert("error");
-            });
+    componentDidUpdate(){
+        if(!this.props.data.loading && !this.state.valueRecieved){
+            let data = this.props.data.appliedJobsByStudentID;
+            this.setState({
+                jobList: data,
+                filteredJobList:data,
+                valueRecieved:true
+            })
+        }
     }
+    //Call the Will Mount to set the auth Flag to false
+    // async componentWillMount() {
+
+    //     await axios.get(`${backendServer}/api/job/getAppliedJobsByStudentID/${localStorage.getItem('id')}`)
+    //         .then(response => {
+    //             this.setState({
+    //                 jobList: response.data.data,
+    //                 filteredJobList: paginate(response.data.data,1, 10),
+    //                     pages: pages(response.data.data, 10)
+    //             })
+    //         }
+    //         ).catch(ex => {
+    //             alert("error");
+    //         });
+    // }
     paginatinon = (e) => {
         this.setState({
             filteredJobList: paginate(this.state.filteredJobList,e, 10)
@@ -150,9 +160,9 @@ class Applications extends Component {
                     </div>
                     <div className="col-sm-12 card">
                         <div className="box-part-container margin20"> <ApplicationJobList jobList={this.state.filteredJobList} />
-                        <ul className="pagination">
+                        {/* <ul className="pagination">
    {links}
-   </ul>
+   </ul> */}
                         </div>
                     </div>
                 </div>
@@ -161,4 +171,8 @@ class Applications extends Component {
     }
 }
 
-export default Applications;
+export default graphql(appliedJobsByStudentIDQuery, {
+    options: {
+        variables: { 'id': localStorage.getItem("id") }
+    }
+})(Applications);

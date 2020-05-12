@@ -17,7 +17,6 @@ var jobSchema = new Schema({
             studentName: { type: String, required: true },
             status: { type: Number, required: true },
             applicationDate: { type: Date, required: true },
-            resumeURL: { type: String, required: true }
         }
     ]
 }

@@ -9,6 +9,8 @@ import axios from 'axios';
 import backendServer from '../../../webConfig'
 import { connect } from 'react-redux';
 import { jobSearchPaginatinon , jobSearchSort } from "../../../js/actions/jobSearch.js";
+import { applyForJobMutation  } from '../../../mutations/mutations'
+import { graphql } from 'react-apollo';
 
 
 
@@ -25,7 +27,7 @@ import { jobSearchPaginatinon , jobSearchSort } from "../../../js/actions/jobSea
 
 
 //create the Navbar Component
-class JobListPage extends Component {
+class JobList extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -107,29 +109,50 @@ class JobListPage extends Component {
     applyModal = () => {
         return (
             MySwal.fire({
-                title: 'Upload Resume',
-                input: 'file',
+                title: 'Apply to job',
                 confirmButtonText: 'Apply',
                 showCancelButton: true,
-                preConfirm: (file) => {
-                    const data = new FormData() 
-                    data.append('file', file)
-                    axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
-                    axios.post(`${backendServer}/api/job/applyForJob?studentID=${localStorage.getItem('id')}&jobID=${this.state.selectedJob._id}&name=${localStorage.getItem('name')}`, data)
-                        .then(response => {
-                            if(response.status==201){
-                                this.setState({
-                                    selectedJob: {
-                                        ...this.state.selectedJob,
-                                        applied:true
-                                    }
-                                })
+                preConfirm: async () => {
+                //     axios.post(`${backendServer}/api/job/applyForJob?studentID=${localStorage.getItem('id')}&jobID=${this.state.selectedJob._id}&name=${localStorage.getItem('name')}`, data)
+                //         .then(response => {
+                //             if(response.status==201){
+                //                 this.setState({
+                //                     selectedJob: {
+                //                         ...this.state.selectedJob,
+                //                         applied:true
+                //                     }
+                //                 })
+                //             }
+                //         }
+                //         ).catch(ex => {
+                //            alert(ex);
+                //         });
+
+
+
+                let mutationResponse = await this.props.applyForJobMutation({
+                    variables: {
+                        jobID: this.state.selectedJob.id,
+                        name: "test",
+                        studentID:localStorage.getItem('id')
+                    }
+                });
+                let response = mutationResponse.data.applyForJobMutation;
+                if (response) {
+                    console.log(response)
+                    if (response.status === "200") {
+                        this.setState({
+                            selectedJob: {
+                                ...this.state.selectedJob,
+                                applied:true
                             }
-                        }
-                        ).catch(ex => {
-                           alert(ex);
-                        });
-                },
+                        })
+                    }
+                    else{
+                        console.log("Couldnt apply")
+                    }
+                }
+                 },
             }).then((result) => {
                 if (result.value) {
                     MySwal.fire({
@@ -165,7 +188,7 @@ class JobListPage extends Component {
 
         let jobs = this.props.jobList.map(job => {
             return (
-                <div className="row job" key={job._id} onClick={() => { this.showJobDetail(job) }} >
+                <div className="row job" key={job.id} onClick={() => { this.showJobDetail(job) }} >
                     <div className="col-sm-12">
                         <h5> {job.title}</h5>
                         <p className="smallText"> {job.companyName} - {job.location}</p>
@@ -220,11 +243,6 @@ class JobListPage extends Component {
 
                     {jobs}
                     {/* pagination */}
-                    <nav>
-                        <ul className="pagination">
-                            {links}
-                        </ul>
-                    </nav>
                 </div>
                 <div className="col-sm-8 jobListRight">
                     {/* <div>
@@ -254,18 +272,5 @@ class JobListPage extends Component {
         )
     }
 }
-const mapStateToProps = state => {
-    return {
-        jobList: state.jobSearchReducer.filteredJobs,
-        pages :  state.jobSearchReducer.pages
-    };
-};
 
-function mapDispatchToProps(dispatch) {
-     return {
-         jobSearchPaginatinon: (data) => dispatch(jobSearchPaginatinon(data)),
-         jobSearchSort: (data) => dispatch(jobSearchSort(data)),
-     };
-}
-const JobList = connect(mapStateToProps, mapDispatchToProps)(JobListPage);
-export default JobList;
+export default graphql(applyForJobMutation,{ name: "applyForJobMutation"})(JobList);

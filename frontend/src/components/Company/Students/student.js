@@ -6,6 +6,8 @@ import backendServer from '../../../webConfig'
 import { paginate, pages } from '../../../helperFunctions/paginate'
 import {dateTimeToDate} from '../../../helperMethods';
 import { Redirect } from 'react-router';
+import { graphql } from 'react-apollo';
+import {studentsQuery} from '../../../queries/queries'
 
 
 
@@ -25,7 +27,8 @@ class Students extends Component {
             collegeFilterArray:[],
             skillsFilterArray:[],
             pages: 0,
-            chatting:false
+            chatting:false,
+            valueRecieved:false
 
         }
 
@@ -35,25 +38,35 @@ class Students extends Component {
 
     }
     //Call the Will Mount to set the auth Flag to false
-    async componentWillMount() {
-        axios.defaults.withCredentials = true;
-        //make a post request with the user data
-        axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
-        await axios.get(`${backendServer}/api/company/getAllStudents`)
-            .then(response => {
-                console.log(response);
-                this.setState({
-                    students: response.data.data,
-                    filteredStudents :  paginate(response.data.data,1,10),
-                    pages: pages(response.data.data, 10)
+    // async componentWillMount() {
+    //     axios.defaults.withCredentials = true;
+    //     //make a post request with the user data
+    //     axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
+    //     await axios.get(`${backendServer}/api/student/getAllStudents/${localStorage.getItem('id')}`)
+    //         .then(response => {
+    //             console.log(response);
+    //             this.setState({
+    //                 students: response.data.data,
+    //                 filteredStudents : response.data.data,
+    //                 pages: pages(response.data.data, 10)
 
-                })
-            }
-            ).catch(ex => {
-                alert(ex);
-            });
+    //             })
+    //         }
+    //         ).catch(ex => {
+    //             alert(ex);
+    //         });
+    // }
+    componentDidUpdate(){
+        if(!this.props.data.loading && !this.state.valueRecieved){
+            let data = this.props.data.students;
+            console.log(data);
+            this.setState({
+                students: data,
+                filteredStudents : data,
+                valueRecieved:true
+            })
+        }
     }
-
     paginatinon = (e) => {
         this.setState({
             filteredStudents: paginate(this.state.students,e, 10)
@@ -76,14 +89,14 @@ class Students extends Component {
     collegeFilterChangeHandler = (e) => {
         if(e.target.checked){
             this.setState({
-                collegeFilterArray : this.state.collegeFilterArray.concat(parseInt(e.target.value))
+                collegeFilterArray : this.state.collegeFilterArray.concat(e.target.value)
            } , ()=>{
                return this.updateStudentsForCollege()
            })
         }
         else{
             var array = [...this.state.collegeFilterArray]; // make a separate copy of the array
-            var index = array.indexOf(parseInt(e.target.value))
+            var index = array.indexOf(e.target.value)
             if (index !== -1) {
                 array.splice(index, 1);
                 this.setState({
@@ -108,8 +121,8 @@ class Students extends Component {
             let filteredstudents = this.state.students;
             this.setState({
                 filteredStudents: filteredstudents.filter((s) => {
-                    console.log(s.education[0].college)
-                    return (this.state.collegeFilterArray.includes(s.education[0].college))
+                    console.log(s.education.college)
+                    return (this.state.collegeFilterArray.includes(s.education.college))
                 }
                 )
             })
@@ -185,15 +198,15 @@ class Students extends Component {
     }
     render() {
         let students = this.state.filteredStudents.map(student => {
-            let profileUrl = '/student/profile/' +student._id ;
             let worksAt = null;
             if(student.title !== null){
-                worksAt =<p><i className="glyphicon glyphicon-briefcase"></i> {student.experience[0].title} at {student.experience[0].company}</p>
+                worksAt =<p><i className="glyphicon glyphicon-briefcase"></i> {student.experience.title} at {student.experience.company}</p>
               }
               else{
                 worksAt =<p><i className="glyphicon glyphicon-briefcase"></i> No work experience listed</p>
 
               }
+            let profileLink = "/student/profile/" + student.id;
             return (
                 <div className="box-part">
                     <div className="card-body container-fluid">
@@ -202,24 +215,24 @@ class Students extends Component {
                         </div>
                         <div className="col-sm-8">
                             <div className="row">
-                            <div className="col-sm-6 nopadding"><a href={profileUrl}><h4 className="card-title">{student.fname} {student.lname}</h4></a>
-                            <h5 className="card-text">{colleges[student.education[0].college]}</h5>
+                            <div className="col-sm-6 nopadding"><a href={profileLink}><h4 className="card-title">{student.fname} {student.lname}</h4></a>
+                            <h5 className="card-text">{colleges[student.education.college]}</h5>
                             </div>
                             </div>
                             <div className="row">
                             <div className="col-sm-6 nopadding">
-                            <p className="card-text">{degreeTypes[student.education[0].degreeType]} ,Graduates {dateTimeToDate(student.education[0].yearOfPassing)} </p>
+                            <p className="card-text">{degreeTypes[student.education.degreeType]} ,Graduates {dateTimeToDate(student.education.yearOfPassing)} </p>
                             {worksAt}
                         </div>
 
                         <div className="col-sm-6 nopadding">
-                            <p >{majors[student.education[0].major]} </p>
-                            <p > GPA : {student.education[0].gpa} / 4 </p>
+                            <p >{majors[student.education.major]} </p>
+                            <p > GPA : {student.education.gpa} / 4 </p>
                         </div>
                         </div>
                         </div>
                         <div className="col-sm-2">
-                            <button className="btn btn-outline-colored" onClick={()=>{this.startChat(student._id , student.fname , student.profilePicURL)}}><i className="glyphicon glyphicon-envelope"></i> Chat</button>
+                            <button className="btn btn-outline-colored" onClick={()=>{this.startChat(student.id , student.fname , student.profilePicURL)}}><i className="glyphicon glyphicon-envelope"></i> Chat</button>
                         </div>
                     </div>
                 </div>
@@ -335,5 +348,4 @@ class Students extends Component {
         )
     }
 }
-
-export default Students;
+export default graphql(studentsQuery)(Students);

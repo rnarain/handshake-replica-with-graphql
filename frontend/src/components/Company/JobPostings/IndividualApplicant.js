@@ -6,7 +6,8 @@ import PostingsNavbar from './PostingsNavbar';
 import backendServer from '../../../webConfig';
 import { connect } from 'react-redux';
 import { changeApplicationStatus  } from "../../../js/actions/companyJobApplicants.js";
-
+import { changeApplicationStatusMutation  } from '../../../mutations/mutations'
+import { graphql , compose } from 'react-apollo';
 
 
 
@@ -23,31 +24,53 @@ class IndividualApplicantPage extends Component {
             studentName:""
         }
     }
-    changeStatus = (e)=>{
-       const data={
-           id : this.state.jobID,
-           status : e.target.value,
-           studentID : this.state.studentID
-       }
-       console.log(data);
-        //change application status
-        axios.defaults.withCredentials = true;
-        axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
-        // make a post request with the user data
-        axios.post(`${backendServer}/api/job/changeApplicationStatus`,data)
-            .then(response => {
-                if (response.status === 200) {
-                    this.props.changeApplicationStatus(data);
-                    this.setState({
-                        status : data.status
-                    })
-                    console.log(response);
-                } else {
-                    console.log("error");
-                }
-            });
-    } 
+    changeStatus = async (e)=>{
 
+        let mutationResponse = await this.props.changeApplicationStatusMutation({
+            variables: {
+                id : this.state.jobID,
+                status : e.target.value,
+                studentID : this.state.studentID
+            }
+        });
+        let response = mutationResponse.data.changeApplicationStatusMutation;
+        if (response) {
+            console.log(response)
+            if (response.status === "200") {
+                this.setState({
+                status : e.target.value
+                })
+            }
+            else{
+                console.log("Couldnt update objective")
+            }
+        }
+        this.setState({
+            edit: !this.state.edit
+        })
+    }
+    //    const data={
+    //        id : this.state.jobID,
+    //        status : e.target.value,
+    //        studentID : this.state.studentID
+    //    }
+    //    console.log(data);
+    //     //change application status
+    //     axios.defaults.withCredentials = true;
+    //     axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
+    //     // make a post request with the user data
+    //     axios.post(`${backendServer}/api/job/changeApplicationStatus`,data)
+    //         .then(response => {
+    //             if (response.status === 200) {
+    //                 this.props.changeApplicationStatus(data);
+    //                 this.setState({
+    //                     status : data.status
+    //                 })
+    //                 console.log(response);
+    //             } else {
+    //                 console.log("error");
+    //             }
+    //         });
 
     componentDidMount() {
         this.setState({
@@ -79,17 +102,5 @@ class IndividualApplicantPage extends Component {
           )
     }
 }
-const mapStateToProps = state => {
-    return {
-        applicationStatus: state.companyJobApplicantReducer.applicationStatus
-    };
-  };
-  
-  function mapDispatchToProps(dispatch) {
-    return {
-        changeApplicationStatus : (data) => dispatch(changeApplicationStatus(data)),
-    };
-  };
-  const IndividualApplicant = connect(mapStateToProps, mapDispatchToProps)(IndividualApplicantPage);
-  export default IndividualApplicant;
 
+export default graphql(changeApplicationStatusMutation,{ name: "changeApplicationStatusMutation"})(IndividualApplicantPage);
